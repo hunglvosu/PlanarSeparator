@@ -13,7 +13,7 @@
 #include "utils.h"
 #include "separator.h"
 #include "test_generator.h"
-#include "triangulation.h"
+#include "low_radius_separator.h"
 
 using namespace std;
 
@@ -41,8 +41,12 @@ int main() {
 	//Graph g = load_hard_coded_graph();
 	Graph g = generate_triangulated_grid(3);
 	//print_graph(g);
-	//cout << "#vertices: " << num_vertices(g) << "\t #edges:" << num_edges(g) << " should have:" << 3 * num_vertices(g) - 6 << " edges" << endl;
-	find_planar_separator(g);
+	cout << "#vertices: " << num_vertices(g) << "\t #edges:" << num_edges(g) << " should have:" << 3 * num_vertices(g) - 6 << " edges" << endl;
+	//find_planar_separator(g);
+	Vertex s = *(vertices(g).first);
+	Vertex t = *(vertices(g).second);
+	//print_graph(g);
+	find_low_radius_separator(g, s);
 	getchar();
 	return 0;
 }

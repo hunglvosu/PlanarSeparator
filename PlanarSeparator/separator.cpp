@@ -34,34 +34,6 @@ int bfs_basic_visit_data::get_bfs_level(Vertex v) {
 void bfs_basic_visit_data::set_bfs_level(Vertex v, int v_level) {
 	levels[vindexer[v]] = v_level;
 }
-/*
-struct bfs_basic_visit_data {
-
-	bfs_basic_visit_data(Graph const & arg_g) : g(arg_g)
-	{
-		vindexer = get(vertex_index, g);
-		eindexer = get(edge_index, g);
-		num_vs = num_vertices(g);
-		num_es = num_edges(g);
-		is_bfs_tree_edges = new bool[num_es];
-		levels = new int[num_vs];
-		for (int i = 0; i < num_es; i++) is_bfs_tree_edges[i] = false;
-		for (int i = 0; i < num_vs; i++) levels[i] = -1;
-	}
-	
-
-	int get_bfs_level(Vertex v) {
-		return levels[vindexer[v]];
-	}
-	void set_bfs_level(Vertex v, int v_level) {
-		levels[vindexer[v]] = v_level;
-	}
-	
-
-
-
-};
-*/
 
 struct bfs_level_data : public bfs_basic_visit_data {
 	

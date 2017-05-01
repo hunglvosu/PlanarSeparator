@@ -38,6 +38,13 @@ void print_graph(Graph const &g) {
 	cout << "*********************************************************\n\n";
 }
 
+void print_tri_face(tri_face f) {
+	boost::tuple<int, int, int> v_on_f = f.get<0>();
+	boost::tuple<int, int, int> e_on_f = f.get<1>();
+
+	std::cout << "(" << v_on_f.get<0>() << "," << v_on_f.get<1>() << "," << v_on_f.get<2>() << ")";
+}
+
 template <typename BFSVisitData>
 void print_bfs_tree_edge(BFSVisitData &data) {
 	cout << "\n**********************  BFS tree edges  **************************\n";

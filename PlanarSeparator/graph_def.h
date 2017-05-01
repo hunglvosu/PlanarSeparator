@@ -6,6 +6,9 @@
 #include <boost/property_map/property_map.hpp>
 #include <vector>
 
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
 using namespace boost;
 
 typedef adjacency_list<vecS,
@@ -24,5 +27,8 @@ typedef boost::property_map<Graph, boost::edge_index_t>::type EdgeIndexer;
 typedef boost::graph_traits<Graph>::edge_iterator		EdgeItr;
 
 typedef std::vector<std::vector<Edge>>					EmbeddingStorage;
+
+typedef boost::tuple<boost::tuple<int, int, int>, boost::tuple<int, int, int>> tri_face;
+//typedef std::tuple<int, int, int>						TriFace;
 
 
