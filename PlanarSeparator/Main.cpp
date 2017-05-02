@@ -36,6 +36,25 @@ Graph load_hard_coded_graph() {
 
 
 
+/*
+struct list_holder {
+
+	std::vector<std::list<int>> data_holder;
+	void make_a_list() {
+		std::list<int> list1;
+		list1.push_back(1);
+		list1.push_back(2);
+		list1.push_back(3);
+		data_holder.push_back(list1);
+	}
+	void change(std::list<int> &list1) {
+		list1.push_back(4);
+		list1.push_back(5);
+		list1.push_back(6);
+
+	}
+};
+*/
 
 int main() {
 	//Graph g = load_hard_coded_graph();
@@ -47,6 +66,56 @@ int main() {
 	Vertex t = *(vertices(g).second);
 	//print_graph(g);
 	find_low_radius_separator(g, s);
+
+
+
+/*	std::list<int> list1;
+	list1.push_back(1);
+	list1.push_back(2);
+	list1.push_back(3);
+	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+		std::cout << *lit << "\t";
+	}
+	std::cout << std::endl;
+	std::list<int> *list2;
+	list2 = &list1;
+	(*list2).push_back(4);
+	(*list2).push_back(5);
+	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+		std::cout << *lit << "\t";
+	}
+
+	std::list<int> list1;
+	list1.push_back(1);
+	list1.push_back(2);
+	list1.push_back(3);
+	//for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+	//	std::cout << *lit << "\t";
+	//}
+	std::map<int, std::list<int>> mymap;
+	mymap[0] = list1;
+	mymap[1] = list1;
+	mymap[1].push_back(4);
+	mymap[1].push_back(5);
+	for (std::list<int>::iterator lit = mymap[1].begin(); lit != mymap[1].end(); ++lit) {
+		std::cout << *lit << "\t";
+	}
+	
+	
+	list_holder holder;
+	holder.make_a_list();
+	holder.change(holder.data_holder.at(0));
+	holder.make_a_list();
+	std::list<int> list1 = holder.data_holder.at(0);
+	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+		std::cout << *lit << "\t";
+	}
+	std::cout << std::endl;
+	holder.data_holder.at(1).splice(holder.data_holder.at(1).end(), holder.data_holder.at(0));
+	list1 = holder.data_holder.at(1);
+	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+		std::cout << *lit << "\t";
+	}*/
 	getchar();
 	return 0;
 }

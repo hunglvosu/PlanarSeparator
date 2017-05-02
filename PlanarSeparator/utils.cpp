@@ -51,3 +51,11 @@ void print_bfs_tree_edge(BFSVisitData &data) {
 	
 
 }
+
+void reset_edge_indices(Graph &g) {
+	EdgeIndexer e_index = get(edge_index, g);
+	graph_traits<Graph>::edges_size_type edge_count = 0;
+	EdgeItr ei, ei_end;
+	for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei)
+		put(e_index, *ei, edge_count++);
+}

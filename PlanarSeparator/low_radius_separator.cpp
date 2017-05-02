@@ -6,6 +6,11 @@
 #include <boost/graph/boyer_myrvold_planar_test.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/undirected_dfs.hpp>
+#include <boost/cstdlib.hpp>
+
+
 #include <math.h>  
 #include "graph_def.h"
 #include "utils.h"
@@ -14,10 +19,21 @@
 #include "low_radius_separator.h"
 
 
+//typedef typename property_traits<VertexColorMap>::value_type ColorValue;
+//typedef color_traits<ColorValue> Color;
+
 struct dual_tree_builder : public bfs_basic_visit_data {
 	typedef std::pair<tri_face, tri_face> tri_face_pair;
 
 	dual_tree_builder(Graph const &arg_g):bfs_basic_visit_data(arg_g) {}
+
+	int index_of_face(tri_face f) {
+		return findexer[f];
+	}
+
+	tri_face face_of_index(int i) {
+		return faces.at(i);
+	}
 
 	void build_dual_tree() {
 		int n = (int)faces.size();
@@ -122,6 +138,62 @@ struct face_visitor : public planar_face_traversal_visitor {
 };
 
 
+// dfs the dual tree to find the separation edge
+
+struct sep_edge_locator :public default_dfs_visitor {
+	std::vector<std::list<int>> cycle_holder;
+	std::list<int>** cycles;
+	sep_edge_locator(dual_tree_builder & arg_dt_builder) : dt_builder(arg_dt_builder) {
+		n = num_vertices(arg_dt_builder.dual_tree);
+		cycles = new std::list<int>*[n];
+	}
+
+	void discover_vertex(Vertex u, const Graph &g) {
+	
+	}
+	void tree_edge(Edge e, const Graph &g) {
+		Vertex u = source(e, g);
+		Vertex v = target(e, g);
+		auto cmap = get(vertex_color, g);
+		Vertex unexplore;
+		if (cmap[u] == Color::white()) {
+			unexplore = u;
+		}
+		else  unexplore = v;
+
+		//std::cout << "Color of " << u << " is " << cmap[u] << std::endl;
+
+	}
+
+	void finish_vertex(Vertex u, const Graph &g) {
+		VertexIndexer vindex = get(vertex_index, g);
+		int u_index = vindex[u];
+		if (degree(u, g) <= 1) { // u is a leaf face
+			tri_face incident_face = dt_builder.face_of_index(u_index);
+			boost::tuple<int, int, int> incident_vertices = incident_face.get<0>();
+			std::list<int> facial_cyce;
+			facial_cyce.push_back(incident_vertices.get<0>());
+			facial_cyce.push_back(incident_vertices.get<1>());
+			facial_cyce.push_back(incident_vertices.get<2>());
+			cycle_holder.push_back(facial_cyce);
+			cycles[u_index] = &facial_cyce;
+			std::cout << "The leaf cycle: ";
+			for (std::list<int>::iterator fit = facial_cyce.begin(); fit != facial_cyce.end(); ++fit) {
+				std::cout << *fit << "\t";
+			}
+			std::cout << std::endl;
+		}
+		else {
+
+		}
+	}
+private:
+	int n;
+	dual_tree_builder dt_builder;
+
+};
+
+
 // precondition: g must be triangulated and source is the center of g
 void find_low_radius_separator(Graph const&g, Vertex source) {
 	dual_tree_builder dtb(g);
@@ -135,5 +207,22 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 	breadth_first_search(g, source, visitor(bfs_visitor));
 	dtb.build_dual_tree();
 	print_graph(dtb.dual_tree);
+	// reset the indices of edges for dfs
+	reset_edge_indices(dtb.dual_tree);
+	
+	// selecting a degree-3 vertex to be the root of dfs
+	Vertex dfs_source;
+	VertexItr vit, vit_end;
+	for (boost::tie(vit, vit_end) = vertices(dtb.dual_tree); vit != vit_end; ++vit) {
+		if (degree(*vit, dtb.dual_tree) == 3) {
+			dfs_source = *vit;
+			break;
+		}
+	}
+	std::cout << "dfs_root: " << dfs_source << std::endl;
+	sep_edge_locator selocator(dtb);
+	depth_first_search(dtb.dual_tree, visitor(selocator).color_map(get(vertex_color, dtb.dual_tree)).root_vertex(dfs_source));
+	//, vertex_color_map(get(vertex_color, dtb.dual_tree))
 }
+
 

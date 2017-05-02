@@ -14,7 +14,7 @@ using namespace boost;
 typedef adjacency_list<vecS,
 	vecS,
 	undirectedS,
-	property<vertex_index_t, int>,
+	property<vertex_color_t, default_color_type, property<vertex_index_t, int>>,
 	property<edge_index_t, int> > Graph;
 
 typedef boost::graph_traits<Graph>::vertex_descriptor	Vertex;
@@ -27,6 +27,11 @@ typedef boost::property_map<Graph, boost::edge_index_t>::type EdgeIndexer;
 typedef boost::graph_traits<Graph>::edge_iterator		EdgeItr;
 
 typedef std::vector<std::vector<Edge>>					EmbeddingStorage;
+
+typedef boost::property_map<Graph, boost::vertex_color_t>::type VertexColorMap;
+typedef typename property_traits<VertexColorMap>::value_type ColorValue;
+typedef color_traits<ColorValue> Color;
+
 
 typedef boost::tuple<boost::tuple<int, int, int>, boost::tuple<int, int, int>> tri_face;
 //typedef std::tuple<int, int, int>						TriFace;
