@@ -38,10 +38,8 @@ void print_graph(Graph const &g) {
 	cout << "*********************************************************\n\n";
 }
 
-void print_tri_face(tri_face f) {
-	boost::tuple<int, int, int> v_on_f = f.get<0>();
-	boost::tuple<int, int, int> e_on_f = f.get<1>();
-
+void print_tri_face(TriFace f) {
+	boost::tuple<Vertex, Vertex, Vertex> v_on_f = f.vertices_on_face;
 	std::cout << "(" << v_on_f.get<0>() << "," << v_on_f.get<1>() << "," << v_on_f.get<2>() << ")";
 }
 

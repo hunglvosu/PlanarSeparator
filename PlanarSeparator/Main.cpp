@@ -39,23 +39,36 @@ Graph load_hard_coded_graph() {
 /*
 struct list_holder {
 
-	std::vector<std::list<int>> data_holder;
+	std::array<std::list<int>,5> data_holder;
+	std::list<int>** ptr_holder = new std::list<int>*[5];
+	
+};
+
+struct list_modifier {
+	int i = 0;
+	list_holder &holder;
+	list_modifier(list_holder &arg_holder) : holder(arg_holder) { }
 	void make_a_list() {
 		std::list<int> list1;
 		list1.push_back(1);
 		list1.push_back(2);
 		list1.push_back(3);
-		data_holder.push_back(list1);
+		//if (holder.data_holder.size() < 3) holder.data_holder.resize(3);
+		//holder.data_holder.push_back(list1);
+		holder.data_holder[i] = list1;
+		//ptr_holder[i] = &list1;
+		holder.ptr_holder[i] = &holder.data_holder[i];
+		cout << "i :" << i << endl;
+		i++;
 	}
-	void change(std::list<int> &list1) {
-		list1.push_back(4);
-		list1.push_back(5);
-		list1.push_back(6);
+	void change(std::list<int> *list1) {
+		(*list1).push_back(4);
+		(*list1).push_back(5);
+		(*list1).push_back(6);
 
 	}
 };
 */
-
 int main() {
 	//Graph g = load_hard_coded_graph();
 	Graph g = generate_triangulated_grid(3);
@@ -66,7 +79,7 @@ int main() {
 	Vertex t = *(vertices(g).second);
 	//print_graph(g);
 	find_low_radius_separator(g, s);
-
+	//find_planar_separator(g);
 
 
 /*	std::list<int> list1;
@@ -101,21 +114,52 @@ int main() {
 		std::cout << *lit << "\t";
 	}
 	
-	
 	list_holder holder;
-	holder.make_a_list();
-	holder.change(holder.data_holder.at(0));
-	holder.make_a_list();
-	std::list<int> list1 = holder.data_holder.at(0);
-	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
+	list_modifier modif(holder);
+	modif.make_a_list();
+	if (holder.ptr_holder[0] == &holder.data_holder.at(0)) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	modif.change(holder.ptr_holder[0]);
+	if (holder.ptr_holder[0] == &holder.data_holder.at(0)) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	modif.make_a_list();
+	cout << "holder size: " << holder.data_holder.size() << endl;
+	//std::list<int> list1 = *(holder.ptr_holder[0]);
+	//std::list<int> list1 = holder.data_holder.at(0);
+	if (holder.ptr_holder[0] == &holder.data_holder[0]) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	std::list<int>* list1 = holder.ptr_holder[0];
+	for (std::list<int>::iterator lit = (*list1).begin(); lit != (*list1).end(); ++lit) {
 		std::cout << *lit << "\t";
 	}
-	std::cout << std::endl;
+/*	std::cout << std::endl;
 	holder.data_holder.at(1).splice(holder.data_holder.at(1).end(), holder.data_holder.at(0));
 	list1 = holder.data_holder.at(1);
 	for (std::list<int>::iterator lit = list1.begin(); lit != list1.end(); ++lit) {
 		std::cout << *lit << "\t";
-	}*/
+	}
+
+	std::unique_ptr<int[]> my_array;
+	my_array.reset(new int[5]);
+	my_array[0] = 0;
+	my_array[1] = 0;
+	my_array[2] = 0;
+	my_array[3] = 0;
+	my_array[4] = 0;
+	*/
+
 	getchar();
 	return 0;
 }

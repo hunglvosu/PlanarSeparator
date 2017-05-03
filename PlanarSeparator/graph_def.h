@@ -33,7 +33,4 @@ typedef typename property_traits<VertexColorMap>::value_type ColorValue;
 typedef color_traits<ColorValue> Color;
 
 
-typedef boost::tuple<boost::tuple<int, int, int>, boost::tuple<int, int, int>> tri_face;
-//typedef std::tuple<int, int, int>						TriFace;
-
 
