@@ -30,7 +30,8 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 
 		// recall graph g is triangulated
 		size_t total_faces = 2 * num_vertices(g) - 4;
-		faces.reset(new TriFace[total_faces]);
+		//faces.reset(new TriFace[total_faces]);
+		faces = new TriFace[total_faces];
 	}
 
 	void build_dual_tree() {
@@ -38,7 +39,9 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 		dual_tree = Graph(n);
 		VertexItr vi, vi_end;
 		int i = 0;
-		dual_v2f_map = make_iterator_property_map(faces.get(), get(vertex_index, dual_tree));
+		//dual_v2f_map = make_iterator_property_map(faces.get(), get(vertex_index, dual_tree));
+		dual_v2f_map = make_iterator_property_map(faces, get(vertex_index, dual_tree));
+
 		for (boost::tie(vi, vi_end) = vertices(dual_tree); vi != vi_end; ++vi) {
 			faces[i].dual_vertex = *vi;		// map a triangular face to a dual vertex
 			dual_v2f_map[*vi] = faces[i];	// map a dual vertex to a triangular face
@@ -76,7 +79,8 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 
 	EdgeFaceMap edge_faces; 
 	DualVertexFaceMap dual_v2f_map;
-	std::unique_ptr<TriFace[]> faces;
+//	std::unique_ptr<TriFace[]> faces;
+	TriFace* faces;
 	Graph dual_tree;
 
 private:
@@ -102,15 +106,7 @@ struct bfs_dual_tree_visitor :public default_bfs_visitor {
 	}
 
 };
-/*
-struct dual_vetex_visitor : public planar_face_traversal_visitor {
-	dual_tree_builder &builder;
-	std::vector<Vertex> vertices_on_face;
-	std::vector<Edge> edges_on_face;
 
-	
-
-};*/
 struct face_visitor : public planar_face_traversal_visitor {
 	
 	dual_tree_builder &builder;
@@ -151,13 +147,19 @@ struct face_visitor : public planar_face_traversal_visitor {
 
 
 // dfs the dual tree to find the separation edge
-/*
+
 struct sep_edge_locator :public default_dfs_visitor {
-	std::vector<std::list<int>> cycle_holder;
-	std::list<int>** cycles;
+	//use array so that the pointer does not change
+	// cannot use vector here
+	std::list<Edge>* cycle_holder;
+	std::list<Edge>** cycle_ptrs;
+	dual_tree_builder &dt_builder;
+
 	sep_edge_locator(dual_tree_builder &arg_dt_builder) : dt_builder(arg_dt_builder) {
-		int n = num_vertices(arg_dt_builder.dual_tree);
-		cycles = new std::list<int>*[n];
+		size_t n = num_vertices(arg_dt_builder.dual_tree);
+		//cycles = new std::list<int>*[n];
+		cycle_holder = new std::list<Edge>[n];
+		cycle_ptrs = new std::list<Edge>*[n];
 	}
 
 	void discover_vertex(Vertex u, const Graph &g) {
@@ -178,23 +180,29 @@ struct sep_edge_locator :public default_dfs_visitor {
 	}
 
 	void finish_vertex(Vertex u, const Graph &g) {
-//		VertexIndexer vindex = get(vertex_index, g);
-//		int u_index = vindex[u];
 		if (degree(u, g) <= 1) { // u is a leaf face
-			//tri_face incident_face = dt_builder.face_of_index(u_index);
 			TriFace incident_face = dt_builder.dual_v2f_map[u];
-/*			boost::tuple<int, int, int> incident_vertices = incident_face.get<0>();
-			std::list<int> facial_cyce;
-			facial_cyce.push_back(incident_vertices.get<0>());
-			facial_cyce.push_back(incident_vertices.get<1>());
-			facial_cyce.push_back(incident_vertices.get<2>());
-			cycle_holder.push_back(facial_cyce);
-			cycles[u_index] = &cycle_holder.back();
 			std::cout << "The leaf cycle: ";
-			for (std::list<int>::iterator fit = facial_cyce.begin(); fit != facial_cyce.end(); ++fit) {
-				std::cout << *fit << "\t";
+			print_tri_face(incident_face);
+			std::cout << std::endl;
+			std::array<Edge, 3> es;
+			boost::tie(es[0], es[1], es[2]) = incident_face.edges_on_face;
+			//std::cout << "Edges: " << es[0] << "\t " << es[1] << "\t" << es[2] << std::endl;
+			for (int i = 0; i < 3; i++) {
+				if (!dt_builder.is_bfs_tree_edges[es[i]]) {
+					//std::cout << "non-tree edge: " << source(es[i], dt_builder.g) << " :" << target(es[i], dt_builder.g);
+					//std::cout << std::endl;
+					cycle_holder[u].push_back(es[(i+1)%3]);
+					cycle_holder[u].push_back(es[(i + 2) % 3]);
+				}
 			}
-			std::cout << std::endl; //
+			//std::cout << std::endl;
+			cycle_ptrs[u] = &cycle_holder[u];
+			std::cout << "cycle: ";
+			for (std::list<Edge>::iterator eit = cycle_holder[u].begin(); eit != cycle_holder[u].end(); ++eit) {
+				std::cout << *eit;
+			}
+			std::cout << std::endl;
 		}
 		else {
 
@@ -202,10 +210,8 @@ struct sep_edge_locator :public default_dfs_visitor {
 	}
 private:
 	int n;
-	dual_tree_builder dt_builder;
-
 };
-*/
+
 
 // precondition: g must be triangulated and source is the center of g
 void find_low_radius_separator(Graph const&g, Vertex source) {
@@ -232,10 +238,20 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 		}
 	}
 	std::cout << "dfs_root: " << dfs_source << std::endl;
-	/*		sep_edge_locator selocator(dtb);
+	sep_edge_locator selocator(dtb);
 	depth_first_search(dtb.dual_tree, visitor(selocator).color_map(get(vertex_color, dtb.dual_tree)).root_vertex(dfs_source));
-	//, vertex_color_map(get(vertex_color, dtb.dual_tree))
-*/
+	/*	std::cout << "Edge classification: "<< std::endl;
+	EdgeItr eit, eit_end;
+	for (boost::tie(eit, eit_end) = edges(g); eit != eit_end; ++eit) {
+	if (dtb.is_bfs_tree_edges[*eit]) {
+	std::cout << *eit << " is a bfs tree edge" << std::endl;
+	}
+	else if(dtb.is_bfs_tree_edges[*eit] == false) {
+	std::cout << *eit << " is not a bfs tree edge" << std::endl;
+	}
+	else {
+	std::cout << *eit << " is nothing"<< std::endl;
+	}
+	}*/
 }
-
 
