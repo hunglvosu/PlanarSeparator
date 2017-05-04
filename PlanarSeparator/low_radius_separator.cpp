@@ -151,15 +151,15 @@ struct face_visitor : public planar_face_traversal_visitor {
 struct sep_edge_locator :public default_dfs_visitor {
 	//use array so that the pointer does not change
 	// cannot use vector here
-	std::list<Edge>* cycle_holder;
-	std::list<Edge>** cycle_ptrs;
+	std::list<Vertex>* cycle_holder;
+	std::list<Vertex>** cycle_ptrs;
 	dual_tree_builder &dt_builder;
 
 	sep_edge_locator(dual_tree_builder &arg_dt_builder) : dt_builder(arg_dt_builder) {
 		size_t n = num_vertices(arg_dt_builder.dual_tree);
 		//cycles = new std::list<int>*[n];
-		cycle_holder = new std::list<Edge>[n];
-		cycle_ptrs = new std::list<Edge>*[n];
+		cycle_holder = new std::list<Vertex>[n];
+		cycle_ptrs = new std::list<Vertex>*[n];
 	}
 
 	void discover_vertex(Vertex u, const Graph &g) {
@@ -189,22 +189,133 @@ struct sep_edge_locator :public default_dfs_visitor {
 			boost::tie(es[0], es[1], es[2]) = incident_face.edges_on_face;
 			//std::cout << "Edges: " << es[0] << "\t " << es[1] << "\t" << es[2] << std::endl;
 			for (int i = 0; i < 3; i++) {
-				if (!dt_builder.is_bfs_tree_edges[es[i]]) {
+				if (!dt_builder.is_bfs_tree_edges[es[i]]) { // Case 1
 					//std::cout << "non-tree edge: " << source(es[i], dt_builder.g) << " :" << target(es[i], dt_builder.g);
 					//std::cout << std::endl;
-					cycle_holder[u].push_back(es[(i+1)%3]);
-					cycle_holder[u].push_back(es[(i + 2) % 3]);
+					std::array<Vertex, 2> uv1;
+					std::array<Vertex, 2> uv2;
+					uv1[0] = source(es[(i + 1) % 3], dt_builder.g);
+					uv1[1] = target(es[(i + 1) % 3], dt_builder.g);
+					uv2[0] = source(es[(i + 2) % 3], dt_builder.g);
+					uv2[1] = target(es[(i + 2) % 3], dt_builder.g);
+					for (int j = 0; j < 2; j++) {
+						for (int k = 0; k < 2; k++) {
+							if (uv1[j] == uv2[k]) {
+								cycle_holder[u].push_back(uv1[(j + 1) & 1]); // push (j+1)%2
+								cycle_holder[u].push_back(uv1[j]);
+								cycle_holder[u].push_back(uv2[(k + 1) & 1]); // push (k+1)%2
+								break;
+							}
+						}
+					}
+
+					//cycle_holder[u].push_back();
+					//cycle_holder[u].push_back(es[(i + 2) % 3]);
 				}
 			}
 			//std::cout << std::endl;
 			cycle_ptrs[u] = &cycle_holder[u];
 			std::cout << "cycle: ";
-			for (std::list<Edge>::iterator eit = cycle_holder[u].begin(); eit != cycle_holder[u].end(); ++eit) {
+			for (std::list<Vertex>::iterator eit = cycle_holder[u].begin(); eit != cycle_holder[u].end(); ++eit) {
 				std::cout << *eit;
 			}
 			std::cout << std::endl;
 		}
 		else {
+			typename graph_traits<Graph>::adjacency_iterator ai, ai_end;
+			std::cout << "Process " << u << std::endl;
+			//OutEdgeItr outit, outit_end;
+			auto cmap = get(vertex_color, g);
+			int n_children = 0;
+			std::array<Vertex, 2> visited_children;
+			// we gurantee the number of children of a vertex is at most 2 because the root of the dfs tree is a leaf
+			// if we choose a degree-3 vertex to be the root, this condition will be broken at the root 
+			for (boost::tie(ai, ai_end) = adjacent_vertices(u, g); ai != ai_end; ++ai) {
+				if (cmap[*ai] == Color::black()) {
+					std::cout << *ai << " is visited" << std::endl;
+					//TriFace dual_face = dt_builder.dual_v2f_map[u];
+					//child_faces[n_children] = dual_face;
+					visited_children[n_children] = *ai;
+					n_children++;
+//					std::cout << "Face :";
+//					print_tri_face(dual_face);
+//					std::cout << std::endl;
+				}
+			}
+			if (n_children == 1) {
+				std::cout << "We are entering Case 2 and Case 3" << std::endl;
+				std::array<Edge, 3> es;
+				std::array<Vertex, 3> vs;
+				TriFace child_face = dt_builder.dual_v2f_map[visited_children[0]];
+				boost::tie(es[0], es[1], es[2]) = child_face.edges_on_face;
+				boost::tie(vs[0], vs[1], vs[2]) = child_face.vertices_on_face;
+				Vertex v, w;
+				// the first and the last vertex in the children path
+				Vertex c_front = (*cycle_ptrs[visited_children[0]]).front();
+				Vertex c_back = (*cycle_ptrs[visited_children[0]]).back();
+				Vertex next_of_c_front = *std::next((*cycle_ptrs[visited_children[0]]).begin());
+				Vertex rev_next_of_c_back = *std::next((*cycle_ptrs[visited_children[0]]).rbegin());
+				for (int i = 0; i < 3; i++) {
+					if (vs[i] != c_front && vs[i] != c_back) {
+						if (vs[i] != next_of_c_front && vs[i] != rev_next_of_c_back) {
+							std::cout << "We are entering Case 2" << std::endl;
+							for (int j = 0; j < 3; j++) {
+								if (dt_builder.is_bfs_tree_edges[es[j]]) {
+									// check wheter whe should insert vs[i] to the front or the back of the cycle
+									if (source(es[j], dt_builder.g) == c_front 
+										|| target(es[j], dt_builder.g) == c_front) {
+										(*cycle_ptrs[visited_children[0]]).push_front(vs[i]);
+									}
+									else {
+										std::cout << c_back << " must be one of: " << source(es[j], dt_builder.g) 
+											<< " \t " << target(es[j], dt_builder.g) << std::endl;
+										(*cycle_ptrs[visited_children[0]]).push_back(vs[i]);
+									}
+									cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
+								}
+							}
+						}
+						else {
+							std::cout << "We are entering Case 3" << std::endl;
+						}
+					}
+					break;
+				}
+				/*for (int i = 0; i < 3; i++) {
+					v = source(es[i], dt_builder.g);
+					w = target(es[i], dt_builder.g);
+					//c_front = (*cycle_ptrs[u]).front();
+					//c_back = (*cycle_ptrs[u]).back();
+					//if ((v == c_front && w == c_back) || (v == c_back && w == c_front)) {
+						std::array<Vertex, 2> uv1;
+						std::array<Vertex, 2> uv2;
+						uv1[0] = source(es[(i + 1) % 3], dt_builder.g);
+						uv1[1] = target(es[(i + 1) % 3], dt_builder.g);
+						uv2[0] = source(es[(i + 2) % 3], dt_builder.g);
+						uv2[1] = target(es[(i + 2) % 3], dt_builder.g);
+						for (int j = 0; j < 2; j++) {
+							for (int k = 0; k < 2; k++) {
+								if (uv1[j] == uv2[k]) {
+									// check whether uv1[j] is in the list of the children cycle
+									if (uv1[j] != *std::next((*cycle_ptrs[u]).begin())
+										&& uv1[j] != *std::next((*cycle_ptrs[u]).rbegin())) {
+										// check wheter we should put uv1[j] to the front or the back of the cycle
+										// enter Case 2
+									}
+									else {
+										// enter Case 3
+									}
+									break;
+								}
+							}
+						}
+					//	break;
+					//}
+				}*/
+			}
+			else {
+				std::cout << "We are entering Case 4" << std::endl;
+			}
 
 		}
 	}
@@ -228,11 +339,11 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 	dtb.build_dual_tree();
 	print_graph(dtb.dual_tree);
 
-	// selecting a degree-3 vertex to be the root of dfs
+	// selecting a leaf vertex to be the root of dfs
 	Vertex dfs_source;
 	VertexItr vit, vit_end;
 	for (boost::tie(vit, vit_end) = vertices(dtb.dual_tree); vit != vit_end; ++vit) {
-		if (degree(*vit, dtb.dual_tree) == 3) {
+		if (degree(*vit, dtb.dual_tree) == 1) {
 			dfs_source = *vit;
 			break;
 		}

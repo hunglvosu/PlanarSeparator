@@ -158,8 +158,17 @@ int main() {
 	my_array[2] = 0;
 	my_array[3] = 0;
 	my_array[4] = 0;
-	*/
-
+	
+	std::list<int> mylist;
+	mylist.push_back(1);
+	mylist.push_back(2);
+	mylist.push_back(3);
+	mylist.push_back(4);
+	mylist.push_back(5);
+	int x = mylist.front();
+	int y = *(std::next(mylist.begin()));
+	int z = *(std::next(mylist.rbegin()));
+	cout << "x :" << x << "\t y:" << y <<  "\t z:" << z <<std::endl;*/
 	getchar();
 	return 0;
 }
