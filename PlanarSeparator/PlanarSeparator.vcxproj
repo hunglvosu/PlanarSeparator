@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="graph_def.h" />
     <ClInclude Include="low_radius_separator.h" />
+    <ClInclude Include="reversible_list.h" />
     <ClInclude Include="separator.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="low_radius_separator.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlanarEmbedding.cpp" />
+    <ClCompile Include="reversible_list.cpp" />
     <ClCompile Include="separator.cpp" />
     <ClCompile Include="test_generator.cpp" />
     <ClCompile Include="test_utils.cpp" />

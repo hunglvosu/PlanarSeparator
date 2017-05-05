@@ -14,6 +14,7 @@
 #include "separator.h"
 #include "test_generator.h"
 #include "low_radius_separator.h"
+#include "reversible_list.h"
 
 using namespace std;
 
@@ -210,6 +211,9 @@ int main() {
 	list2.push_back(6);
 	list2.push_back(7);
 	list2.push_back(8); */
+	srlist<int> rev_list;
+	rev_list.push_back(1);
+
 
 	getchar();
 	return 0;
