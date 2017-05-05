@@ -65,10 +65,14 @@ struct list_modifier {
 		(*list1).push_back(4);
 		(*list1).push_back(5);
 		(*list1).push_back(6);
+		(*list1).push_front(-1);
+		(*list1).push_front(-2);
+		(*list1).push_front(-3);
+
 
 	}
-};
-*/
+};*/
+
 int main() {
 	//Graph g = load_hard_coded_graph();
 	Graph g = generate_triangulated_grid(3);
@@ -78,7 +82,7 @@ int main() {
 	Vertex s = *(vertices(g).first);
 	Vertex t = *(vertices(g).second);
 	//print_graph(g);
-	find_low_radius_separator(g, s);
+	//find_low_radius_separator(g, s);
 	//find_planar_separator(g);
 
 
@@ -168,7 +172,45 @@ int main() {
 	int x = mylist.front();
 	int y = *(std::next(mylist.begin()));
 	int z = *(std::next(mylist.rbegin()));
-	cout << "x :" << x << "\t y:" << y <<  "\t z:" << z <<std::endl;*/
+	cout << "x :" << x << "\t y:" << y <<  "\t z:" << z <<std::endl;
+////////////////////////////////////////////////////////////////////////
+	std::vector<int> testList;
+	testList.push_back(1);
+	testList.push_back(2);
+	testList.push_back(3);
+	std::vector<int>* listptr;
+	listptr = &testList;
+	std::cout << "Action 1: Address of the list: " << &testList;
+	std::cout << "\t Address of the pointer: " << listptr << std::endl;
+
+	testList.push_back(4);
+	testList.push_back(5);
+	testList.push_back(5);
+
+	testList.push_back(5);
+	testList.push_back(5);
+	testList.push_back(5);
+	testList.push_back(5);
+
+	std::cout << "Action 2: Address of the list: " << &testList;
+	std::cout << "\t Address of the pointer: " << listptr << std::endl;
+	testList[10];
+
+	testList.push_front(0);
+	testList.push_front(-1);
+	std::cout << "Action 3: Address of the list: " << &testList;
+	std::cout << "\t Address of the pointer: " << listptr << std::endl;
+	
+	std::list<int> list1;
+	list1.push_back(1);
+	list1.push_back(2);
+	list1.push_back(3);
+
+	std::list<int> list2;
+	list2.push_back(6);
+	list2.push_back(7);
+	list2.push_back(8); */
+
 	getchar();
 	return 0;
 }

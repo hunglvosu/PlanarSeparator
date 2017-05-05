@@ -180,6 +180,7 @@ struct sep_edge_locator :public default_dfs_visitor {
 	}
 
 	void finish_vertex(Vertex u, const Graph &g) {
+		std::cout << "Visiting : " << u << std::endl;
 		if (degree(u, g) <= 1) { // u is a leaf face
 			TriFace incident_face = dt_builder.dual_v2f_map[u];
 			std::cout << "The leaf cycle: ";
@@ -233,8 +234,6 @@ struct sep_edge_locator :public default_dfs_visitor {
 			for (boost::tie(ai, ai_end) = adjacent_vertices(u, g); ai != ai_end; ++ai) {
 				if (cmap[*ai] == Color::black()) {
 					std::cout << *ai << " is visited" << std::endl;
-					//TriFace dual_face = dt_builder.dual_v2f_map[u];
-					//child_faces[n_children] = dual_face;
 					visited_children[n_children] = *ai;
 					n_children++;
 //					std::cout << "Face :";
@@ -246,20 +245,32 @@ struct sep_edge_locator :public default_dfs_visitor {
 				std::cout << "We are entering Case 2 and Case 3" << std::endl;
 				std::array<Edge, 3> es;
 				std::array<Vertex, 3> vs;
-				TriFace child_face = dt_builder.dual_v2f_map[visited_children[0]];
-				boost::tie(es[0], es[1], es[2]) = child_face.edges_on_face;
-				boost::tie(vs[0], vs[1], vs[2]) = child_face.vertices_on_face;
-				Vertex v, w;
+				TriFace dual_face = dt_builder.dual_v2f_map[u];
+				print_tri_face(dual_face);
+				std::cout << std::endl;
+				boost::tie(es[0], es[1], es[2]) = dual_face.edges_on_face;
+				boost::tie(vs[0], vs[1], vs[2]) = dual_face.vertices_on_face;
 				// the first and the last vertex in the children path
 				Vertex c_front = (*cycle_ptrs[visited_children[0]]).front();
 				Vertex c_back = (*cycle_ptrs[visited_children[0]]).back();
 				Vertex next_of_c_front = *std::next((*cycle_ptrs[visited_children[0]]).begin());
 				Vertex rev_next_of_c_back = *std::next((*cycle_ptrs[visited_children[0]]).rbegin());
+				std::cout << "c_front: " << c_front << "\t c_back: " << c_back
+					<< "\t next_of_c_front:" << next_of_c_front << "\t rev_next_of_c_back " << rev_next_of_c_back << std::endl;
+
+				// match the endpoints of an edge of the dual_face
+				// with two endpoints of the child path
 				for (int i = 0; i < 3; i++) {
 					if (vs[i] != c_front && vs[i] != c_back) {
+						// found the top vertex vs[i]
+						// check wether vs[i] is in the child path
+						// if not we are in Case 2
+						// otherwise, we are in Case 3
 						if (vs[i] != next_of_c_front && vs[i] != rev_next_of_c_back) {
 							std::cout << "We are entering Case 2" << std::endl;
-							for (int j = 0; j < 3; j++) {
+							for (int j = 0; j < 3; j++) { 
+								// fin the edge in the bfs_tree of the dual_face
+								// note there is only one such edge
 								if (dt_builder.is_bfs_tree_edges[es[j]]) {
 									// check wheter whe should insert vs[i] to the front or the back of the cycle
 									if (source(es[j], dt_builder.g) == c_front 
@@ -272,49 +283,51 @@ struct sep_edge_locator :public default_dfs_visitor {
 										(*cycle_ptrs[visited_children[0]]).push_back(vs[i]);
 									}
 									cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
+									/*
+									c_front = (*cycle_ptrs[u]).front();
+									c_back = (*cycle_ptrs[u]).back();
+									next_of_c_front = *std::next((*cycle_ptrs[u]).begin());
+									rev_next_of_c_back = *std::next((*cycle_ptrs[u]).rbegin());
+									std::cout << "c_front: " << c_front << "\t c_back: " << c_back
+										<< "\t next_of_c_front:" << next_of_c_front << "\t rev_next_of_c_back " << rev_next_of_c_back << std::endl;
+										*/
+
 								}
+								break;
 							}
 						}
 						else {
 							std::cout << "We are entering Case 3" << std::endl;
+							if (vs[i] == next_of_c_front) {
+								(*cycle_ptrs[visited_children[0]]).pop_front();
+							}
+							else if (vs[i] == rev_next_of_c_back) {
+								(*cycle_ptrs[visited_children[0]]).pop_back();
+							}
+							else {
+								std::cout << "something must be wrong here!" << std::endl;
+							}
+							cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
+							/*
+							c_front = (*cycle_ptrs[u]).front();
+							c_back = (*cycle_ptrs[u]).back();
+							next_of_c_front = *std::next((*cycle_ptrs[u]).begin());
+							rev_next_of_c_back = *std::next((*cycle_ptrs[u]).rbegin());
+							std::cout << "c_front: " << c_front << "\t c_back: " << c_back
+							<< "\t next_of_c_front:" << next_of_c_front << "\t rev_next_of_c_back " << rev_next_of_c_back << std::endl;
+							*/
 						}
 					}
 					break;
 				}
-				/*for (int i = 0; i < 3; i++) {
-					v = source(es[i], dt_builder.g);
-					w = target(es[i], dt_builder.g);
-					//c_front = (*cycle_ptrs[u]).front();
-					//c_back = (*cycle_ptrs[u]).back();
-					//if ((v == c_front && w == c_back) || (v == c_back && w == c_front)) {
-						std::array<Vertex, 2> uv1;
-						std::array<Vertex, 2> uv2;
-						uv1[0] = source(es[(i + 1) % 3], dt_builder.g);
-						uv1[1] = target(es[(i + 1) % 3], dt_builder.g);
-						uv2[0] = source(es[(i + 2) % 3], dt_builder.g);
-						uv2[1] = target(es[(i + 2) % 3], dt_builder.g);
-						for (int j = 0; j < 2; j++) {
-							for (int k = 0; k < 2; k++) {
-								if (uv1[j] == uv2[k]) {
-									// check whether uv1[j] is in the list of the children cycle
-									if (uv1[j] != *std::next((*cycle_ptrs[u]).begin())
-										&& uv1[j] != *std::next((*cycle_ptrs[u]).rbegin())) {
-										// check wheter we should put uv1[j] to the front or the back of the cycle
-										// enter Case 2
-									}
-									else {
-										// enter Case 3
-									}
-									break;
-								}
-							}
-						}
-					//	break;
-					//}
-				}*/
 			}
 			else {
 				std::cout << "We are entering Case 4" << std::endl;
+				Vertex v = visited_children[0];
+				Vertex w = visited_children[1];
+				// pretty bad here because we dont  have reversible doubly linked list in constant time
+
+
 			}
 
 		}
