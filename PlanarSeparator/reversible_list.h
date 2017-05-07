@@ -149,10 +149,13 @@ void srlist<T>::splice(srlist<T> _arg_list) {
 	// connect end_node to arg_start_node and vice versa
 	int i = (_end_node->_neighbors[0] == _tail) ? 0 : 1;
 	_end_node->_neighbors[i] = _arg_start_node;
-	int j = (_arg_start_node->_neighbors[0] == _arg_list._head) ? 0 : 1;
-	_arg_start_node->_neighbors[j] = _end_node;
+	i = (_arg_start_node->_neighbors[0] == _arg_list._head) ? 0 : 1;
+	_arg_start_node->_neighbors[i] = _end_node;
 	// replace tail by the tail of arg_list
-	_tail = _arg_list._tail;
+	_srl_node<T>* _arg_end_node = _arg_list._tail->_neighbors[0];
+	i = (_arg_end_node->_neighbors[0] == _arg_list._tail) ? 0 : 1;
+	_tail->_neighbors[0] = _arg_end_node;
+	_arg_end_node->_neighbors[i] = _tail;
 	_size += _arg_list.size();
 }
 
@@ -220,11 +223,11 @@ void srlist<T>::debug() {
 	rev_list.push_front(-1);
 	std::cout << "rev_list size: " << rev_list.size() << std::endl;
 	rev_list.print();
-	rev_list.remove_font();
+	rev_list.remove_front();
 	std::cout << "remove front: " << std::endl;
 	std::cout << "rev_list size: " << rev_list.size() << std::endl;
 	rev_list.print();
-	rev_list.remove_font();
+	rev_list.remove_front();
 	std::cout << "remove front: " << std::endl;
 	std::cout << "rev_list size: " << rev_list.size() << std::endl;
 	rev_list.print();
@@ -239,6 +242,10 @@ void srlist<T>::debug() {
 	rev_list1.print();
 	rev_list.splice(rev_list1);
 	std::cout << "splice: " << std::endl;
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.reverse();
+	std::cout << "revere the spliced list" << std::endl;
 	std::cout << "rev_list size: " << rev_list.size() << std::endl;
 	rev_list.print();
 

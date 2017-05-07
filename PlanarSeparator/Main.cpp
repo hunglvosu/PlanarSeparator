@@ -217,8 +217,8 @@ int main() {
 	//	_srl_node<int> samplenode(3);
 	//	std::cout << "Sample node: " << samplenode._data << std::endl;
 
-	//	srlist<int> rev_list;
-	//	rev_list.debug();
+	//srlist<int> rev_list;
+	//rev_list.debug();
 
 	/*list_holder holder;
 	list_modifier modif(holder);

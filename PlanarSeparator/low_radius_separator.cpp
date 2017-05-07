@@ -335,6 +335,12 @@ struct sep_edge_locator :public default_dfs_visitor {
 				Vertex w = visited_children[1];
 				srlist<Vertex> v_cycle = *(cycle_ptrs[v]);
 				srlist<Vertex> w_cycle = *(cycle_ptrs[w]);
+				std::cout << "v_cycle: ";
+				v_cycle.print();
+				std::cout << "w_cycle:";
+				w_cycle.print();
+				std::cout << "v_front: " << v_cycle.front() << "\t v_back:" << v_cycle.back()
+					<< "\t w_front: " << w_cycle.front() << "\t w_back:" << w_cycle.back() << std::endl;
 				// gurantee that v_cycle.back() == w_cycle.front()
 				if (v_cycle.front() == w_cycle.front()) {
 					v_cycle.reverse();
@@ -346,10 +352,18 @@ struct sep_edge_locator :public default_dfs_visitor {
 				else if (v_cycle.back() == w_cycle.back()) {
 					w_cycle.reverse();
 				}
-				else { // v_cycle.back() == w_cycle.front()
+				else  if (v_cycle.back() == w_cycle.front()) {
+					//do nothing
+				} else { // v_cycle.back() == w_cycle.front()
 					// do nothing
 					std::cout << "back of v_cycle: " << v_cycle.back() << "\t front of w_cycle: " << w_cycle.front() << std::endl;
 				}
+				std::cout << "post reversal:" << std::endl;
+				std::cout << "v_cycle: ";
+				v_cycle.print();
+				std::cout << "w_cycle:";
+				w_cycle.print();
+
 				while (v_cycle.next(v_cycle._tail, v_cycle._tail->_neighbors[0]) == 
 					w_cycle.next(w_cycle._head, w_cycle._head->_neighbors[0])) {
 					v_cycle.remove_back();
