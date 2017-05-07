@@ -17,6 +17,7 @@
 #include "test_utils.h"
 #include "separator.h"
 #include "low_radius_separator.h"
+#include "reversible_list.h"
 
 
 
@@ -151,15 +152,17 @@ struct face_visitor : public planar_face_traversal_visitor {
 struct sep_edge_locator :public default_dfs_visitor {
 	//use array so that the pointer does not change
 	// cannot use vector here
-	std::list<Vertex>* cycle_holder;
-	std::list<Vertex>** cycle_ptrs;
+	//std::list<Vertex>* cycle_holder;
+	//std::list<Vertex>** cycle_ptrs;
+	srlist<Vertex>* cycle_holder;
+	srlist<Vertex>** cycle_ptrs;
 	dual_tree_builder &dt_builder;
 
 	sep_edge_locator(dual_tree_builder &arg_dt_builder) : dt_builder(arg_dt_builder) {
 		size_t n = num_vertices(arg_dt_builder.dual_tree);
 		//cycles = new std::list<int>*[n];
-		cycle_holder = new std::list<Vertex>[n];
-		cycle_ptrs = new std::list<Vertex>*[n];
+		cycle_holder = new srlist<Vertex>[n];
+		cycle_ptrs = new srlist<Vertex>*[n];
 	}
 
 	void discover_vertex(Vertex u, const Graph &g) {
@@ -217,10 +220,11 @@ struct sep_edge_locator :public default_dfs_visitor {
 			//std::cout << std::endl;
 			cycle_ptrs[u] = &cycle_holder[u];
 			std::cout << "cycle: ";
-			for (std::list<Vertex>::iterator eit = cycle_holder[u].begin(); eit != cycle_holder[u].end(); ++eit) {
-				std::cout << *eit;
-			}
-			std::cout << std::endl;
+			cycle_holder[u].print();
+			//for (std::list<Vertex>::iterator eit = cycle_holder[u].begin(); eit != cycle_holder[u].end(); ++eit) {
+			//	std::cout << *eit;
+			//}
+			//std::cout << std::endl;
 		}
 		else {
 			typename graph_traits<Graph>::adjacency_iterator ai, ai_end;
@@ -253,8 +257,12 @@ struct sep_edge_locator :public default_dfs_visitor {
 				// the first and the last vertex in the children path
 				Vertex c_front = (*cycle_ptrs[visited_children[0]]).front();
 				Vertex c_back = (*cycle_ptrs[visited_children[0]]).back();
-				Vertex next_of_c_front = *std::next((*cycle_ptrs[visited_children[0]]).begin());
-				Vertex rev_next_of_c_back = *std::next((*cycle_ptrs[visited_children[0]]).rbegin());
+//				Vertex next_of_c_front = *std::next((*cycle_ptrs[visited_children[0]]).begin());
+				Vertex next_of_c_front = (*cycle_ptrs[visited_children[0]]).next(cycle_ptrs[visited_children[0]]->_head, 
+					cycle_ptrs[visited_children[0]]->_head->_neighbors[0]);
+				//Vertex rev_next_of_c_back = *std::next((*cycle_ptrs[visited_children[0]]).rbegin());
+				Vertex rev_next_of_c_back = (*cycle_ptrs[visited_children[0]]).next(cycle_ptrs[visited_children[0]]->_tail,
+					cycle_ptrs[visited_children[0]]->_tail->_neighbors[0]);
 				std::cout << "c_front: " << c_front << "\t c_back: " << c_back
 					<< "\t next_of_c_front:" << next_of_c_front << "\t rev_next_of_c_back " << rev_next_of_c_back << std::endl;
 
@@ -299,10 +307,10 @@ struct sep_edge_locator :public default_dfs_visitor {
 						else {
 							std::cout << "We are entering Case 3" << std::endl;
 							if (vs[i] == next_of_c_front) {
-								(*cycle_ptrs[visited_children[0]]).pop_front();
+								(*cycle_ptrs[visited_children[0]]).remove_front();
 							}
 							else if (vs[i] == rev_next_of_c_back) {
-								(*cycle_ptrs[visited_children[0]]).pop_back();
+								(*cycle_ptrs[visited_children[0]]).remove_back();
 							}
 							else {
 								std::cout << "something must be wrong here!" << std::endl;
@@ -325,9 +333,34 @@ struct sep_edge_locator :public default_dfs_visitor {
 				std::cout << "We are entering Case 4" << std::endl;
 				Vertex v = visited_children[0];
 				Vertex w = visited_children[1];
-				// pretty bad here because we dont  have reversible doubly linked list in constant time
-
-
+				srlist<Vertex> v_cycle = *(cycle_ptrs[v]);
+				srlist<Vertex> w_cycle = *(cycle_ptrs[w]);
+				// gurantee that v_cycle.back() == w_cycle.front()
+				if (v_cycle.front() == w_cycle.front()) {
+					v_cycle.reverse();
+				}
+				else if (v_cycle.front() == w_cycle.back()) {
+					v_cycle.reverse();
+					w_cycle.reverse();
+				}
+				else if (v_cycle.back() == w_cycle.back()) {
+					w_cycle.reverse();
+				}
+				else { // v_cycle.back() == w_cycle.front()
+					// do nothing
+					std::cout << "back of v_cycle: " << v_cycle.back() << "\t front of w_cycle: " << w_cycle.front() << std::endl;
+				}
+				while (v_cycle.next(v_cycle._tail, v_cycle._tail->_neighbors[0]) == 
+					w_cycle.next(w_cycle._head, w_cycle._head->_neighbors[0])) {
+					v_cycle.remove_back();
+					w_cycle.remove_front();
+					std::cout << "Next of v_cycle: " << v_cycle.back() << "\t Next of w_cycle: " << w_cycle.front() << std::endl;
+				}
+				w_cycle.remove_front();
+				v_cycle.splice(w_cycle);
+				(*cycle_ptrs[v]).print();
+				std::cout << "end of case 4" << std::endl;
+				cycle_ptrs[u] = cycle_ptrs[v];
 			}
 
 		}

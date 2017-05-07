@@ -40,20 +40,20 @@ Graph load_hard_coded_graph() {
 
 
 
-/*
+
 struct list_holder {
 
-	std::array<std::list<int>,5> data_holder;
-	std::list<int>** ptr_holder = new std::list<int>*[5];
-	
-};
+	std::array<srlist<int>, 5> data_holder;
+	srlist<int>** ptr_holder = new srlist<int>*[5];
 
+};
+/*
 struct list_modifier {
 	int i = 0;
 	list_holder &holder;
 	list_modifier(list_holder &arg_holder) : holder(arg_holder) { }
 	void make_a_list() {
-		std::list<int> list1;
+		srlist<int> list1;
 		list1.push_back(1);
 		list1.push_back(2);
 		list1.push_back(3);
@@ -65,7 +65,7 @@ struct list_modifier {
 		cout << "i :" << i << endl;
 		i++;
 	}
-	void change(std::list<int> *list1) {
+	void change(srlist<int> *list1) {
 		(*list1).push_back(4);
 		(*list1).push_back(5);
 		(*list1).push_back(6);
@@ -86,7 +86,7 @@ int main() {
 	Vertex s = *(vertices(g).first);
 	Vertex t = *(vertices(g).second);
 	//print_graph(g);
-	//find_low_radius_separator(g, s);
+	find_low_radius_separator(g, s);
 	//find_planar_separator(g);
 
 
@@ -121,7 +121,7 @@ int main() {
 	for (std::list<int>::iterator lit = mymap[1].begin(); lit != mymap[1].end(); ++lit) {
 		std::cout << *lit << "\t";
 	}
-	
+
 	list_holder holder;
 	list_modifier modif(holder);
 	modif.make_a_list();
@@ -166,7 +166,7 @@ int main() {
 	my_array[2] = 0;
 	my_array[3] = 0;
 	my_array[4] = 0;
-	
+
 	std::list<int> mylist;
 	mylist.push_back(1);
 	mylist.push_back(2);
@@ -204,7 +204,7 @@ int main() {
 	testList.push_front(-1);
 	std::cout << "Action 3: Address of the list: " << &testList;
 	std::cout << "\t Address of the pointer: " << listptr << std::endl;
-	
+
 	std::list<int> list1;
 	list1.push_back(1);
 	list1.push_back(2);
@@ -214,11 +214,45 @@ int main() {
 	list2.push_back(6);
 	list2.push_back(7);
 	list2.push_back(8); */
-//	_srl_node<int> samplenode(3);
-//	std::cout << "Sample node: " << samplenode._data << std::endl;
+	//	_srl_node<int> samplenode(3);
+	//	std::cout << "Sample node: " << samplenode._data << std::endl;
 
-//	srlist<int> rev_list;
-//	rev_list.debug();
+	//	srlist<int> rev_list;
+	//	rev_list.debug();
+
+	/*list_holder holder;
+	list_modifier modif(holder);
+	modif.make_a_list();
+	if (holder.ptr_holder[0] == &holder.data_holder.at(0)) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	modif.change(holder.ptr_holder[0]);
+	if (holder.ptr_holder[0] == &holder.data_holder.at(0)) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	modif.make_a_list();
+	cout << "holder size: " << holder.data_holder.size() << endl;
+	//std::list<int> list1 = *(holder.ptr_holder[0]);
+	//std::list<int> list1 = holder.data_holder.at(0);
+
+	if (holder.ptr_holder[0] == &holder.data_holder[0]) {
+		cout << "the pointer is preserved" << endl;
+	}
+	else {
+		cout << "the pointer changed" << endl;
+	}
+	srlist<int>* list1 = holder.ptr_holder[0];
+	(*list1).print();
+	holder.data_holder[1].splice(holder.data_holder[0]);
+	list1 = holder.ptr_holder[1];
+	(*list1).print();*/
+
 	getchar();
 	return 0;
 }

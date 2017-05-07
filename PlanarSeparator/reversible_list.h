@@ -37,11 +37,12 @@ public:
 	_srl_node<T>* _head;
 	_srl_node<T>* _tail;
 	srlist();
+	T next(_srl_node<T>* _prev_curr, _srl_node<T>* _curr);
 	void push_back(T elem);
 	void remove_back();
 	T back();
 	void push_front(T elem);
-	void remove_font();
+	void remove_front();
 	T front();
 	void splice(srlist<T> _arg_list);
 	void reverse();
@@ -61,7 +62,11 @@ srlist<T>::srlist() {	// default constructor
 	_tail->_neighbors[0] = _head;
 	_size = 0;
 }
-
+template<typename T>
+T srlist<T>::next(_srl_node<T>* _prev_curr, _srl_node<T>* _curr) {
+	int i = (_curr->_neighbors[0] == _prev_curr) ? 0 : 1;
+	return _curr->_neighbors[1 - i]->_data;
+}
 
 template<typename T>
 void srlist<T>::push_back(T elem) {
@@ -96,7 +101,7 @@ void srlist<T>::remove_back() {
 
 template<typename T>
 T srlist<T>::back() {
-	return _tail->_neighbors[0]->data;
+	return _tail->_neighbors[0]->_data;
 }
 
 template<typename T>
@@ -116,7 +121,7 @@ void srlist<T>::push_front(T elem){
 
 // precondition: the list must be non-empty
 template<typename T>
-void srlist<T>::remove_font() {
+void srlist<T>::remove_front() {
 	_srl_node<T>* _start_node = _head->_neighbors[0];
 	_start_node->_color = 0;
 	int i = (_start_node->_neighbors[0] == _head) ? 0 : 1;
@@ -133,7 +138,7 @@ void srlist<T>::remove_font() {
 
 template<typename T>
 T srlist<T>::front() {
-	return _head->_neighbors[0]->data;
+	return _head->_neighbors[0]->_data;
 }
 
 template<typename T>
