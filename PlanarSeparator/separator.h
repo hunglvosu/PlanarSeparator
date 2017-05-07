@@ -2,6 +2,7 @@
 
 #include "graph_def.h"
 
+
 struct bfs_basic_visit_data {
 	typedef iterator_property_map<std::vector<bool>::iterator, EdgeIndexer> EdgeMarkerMap;
 	typedef iterator_property_map<std::vector<int>::iterator, VertexIndexer> LevelMap;

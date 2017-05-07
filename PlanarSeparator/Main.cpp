@@ -15,8 +15,11 @@
 #include "test_generator.h"
 #include "low_radius_separator.h"
 #include "reversible_list.h"
+//#include "simple_rev_list.h"
 
 using namespace std;
+template<typename T>
+class srlist;
 
 Graph load_hard_coded_graph() {
 	Graph g(8);
@@ -211,10 +214,30 @@ int main() {
 	list2.push_back(6);
 	list2.push_back(7);
 	list2.push_back(8); */
-	srlist<int> rev_list;
+//	_srl_node<int> samplenode(3);
+//	std::cout << "Sample node: " << samplenode._data << std::endl;
+
+    srlist<int> rev_list;
+	rev_list.push_back(3);
+	rev_list.push_back(2);
 	rev_list.push_back(1);
-
-
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.remove_back();
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.push_front(0);
+	rev_list.push_front(-1);
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.remove_font();
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.remove_font();
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	rev_list.print();
+	rev_list.reverse();
+	rev_list.print();
 	getchar();
 	return 0;
 }

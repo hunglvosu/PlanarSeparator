@@ -161,7 +161,6 @@
     <ClCompile Include="low_radius_separator.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlanarEmbedding.cpp" />
-    <ClCompile Include="reversible_list.cpp" />
     <ClCompile Include="separator.cpp" />
     <ClCompile Include="test_generator.cpp" />
     <ClCompile Include="test_utils.cpp" />

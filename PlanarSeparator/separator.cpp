@@ -14,6 +14,7 @@
 using namespace boost;
 int separation_threshold;
 
+
 bfs_basic_visit_data::bfs_basic_visit_data(Graph const & arg_g) : g(arg_g)
 {
 	VertexIndexer vindexer = get(vertex_index, g);
