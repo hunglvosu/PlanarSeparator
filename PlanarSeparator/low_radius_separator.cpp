@@ -113,7 +113,7 @@ struct face_visitor : public planar_face_traversal_visitor {
 	dual_tree_builder &builder;
 	std::vector<Vertex> vertices_on_face;
 	std::vector<Edge> edges_on_face;
-
+	
 	face_visitor(dual_tree_builder &arg_builder) : builder(arg_builder) {}
 
 	void next_vertex(Vertex v) {
@@ -155,12 +155,17 @@ struct sep_edge_locator :public default_dfs_visitor {
 	srlist<Vertex>* cycle_holder;
 	srlist<Vertex>** cycle_ptrs;
 	dual_tree_builder &dt_builder;
+	int *inside_count;		// inside_count[u] is the number of vertices enclosed by the primal cycle that 
+							// corresponds to the parent dual edge incident to u
+	bool is_separator_found = false;
+
 
 	sep_edge_locator(dual_tree_builder &arg_dt_builder) : dt_builder(arg_dt_builder) {
 		size_t n = num_vertices(arg_dt_builder.dual_tree);
 		//cycles = new std::list<int>*[n];
 		cycle_holder = new srlist<Vertex>[n];
 		cycle_ptrs = new srlist<Vertex>*[n];
+		inside_count = new int[n];
 	}
 
 	void discover_vertex(Vertex u, const Graph &g) {
@@ -181,6 +186,10 @@ struct sep_edge_locator :public default_dfs_visitor {
 	}
 
 	void finish_vertex(Vertex u, const Graph &g) {
+		if (is_separator_found) {
+			std::cout << "The separator is found !" << std::endl;
+			return;
+		}
 		std::cout << "Visiting : " << u << std::endl;
 		if (degree(u, g) <= 1) { // u is a leaf face
 			TriFace incident_face = dt_builder.dual_v2f_map[u];
@@ -191,8 +200,6 @@ struct sep_edge_locator :public default_dfs_visitor {
 			boost::tie(es[0], es[1], es[2]) = incident_face.edges_on_face;
 			for (int i = 0; i < 3; i++) {
 				if (!dt_builder.is_bfs_tree_edges[es[i]]) { // Case 1
-					//std::cout << "non-tree edge: " << source(es[i], dt_builder.g) << " :" << target(es[i], dt_builder.g);
-					//std::cout << std::endl;
 					std::array<Vertex, 2> uv1;
 					std::array<Vertex, 2> uv2;
 					uv1[0] = source(es[(i + 1) % 3], dt_builder.g);
@@ -212,6 +219,7 @@ struct sep_edge_locator :public default_dfs_visitor {
 				}
 			}
 			cycle_ptrs[u] = &cycle_holder[u];
+			inside_count[u] = 0;
 //			cycle_holder[u].print();
 		}
 		else {
@@ -238,13 +246,16 @@ struct sep_edge_locator :public default_dfs_visitor {
 				std::cout << std::endl;
 				boost::tie(es[0], es[1], es[2]) = dual_face.edges_on_face;
 				boost::tie(vs[0], vs[1], vs[2]) = dual_face.vertices_on_face;
+
+				Vertex v = visited_children[0]; // the only child of u in the dual tree
+				
 				// the first and the last vertex in the children path
-				Vertex c_front = (*cycle_ptrs[visited_children[0]]).front();
-				Vertex c_back = (*cycle_ptrs[visited_children[0]]).back();
-				Vertex next_of_c_front = (*cycle_ptrs[visited_children[0]]).next(cycle_ptrs[visited_children[0]]->_head, 
-					cycle_ptrs[visited_children[0]]->_head->_neighbors[0]);
-				Vertex rev_next_of_c_back = (*cycle_ptrs[visited_children[0]]).next(cycle_ptrs[visited_children[0]]->_tail,
-					cycle_ptrs[visited_children[0]]->_tail->_neighbors[0]);
+				Vertex c_front = (*cycle_ptrs[v]).front();
+				Vertex c_back = (*cycle_ptrs[v]).back();
+				Vertex next_of_c_front = (*cycle_ptrs[v]).next(cycle_ptrs[v]->_head, 
+					cycle_ptrs[v]->_head->_neighbors[0]);
+				Vertex rev_next_of_c_back = (*cycle_ptrs[v]).next(cycle_ptrs[v]->_tail,
+					cycle_ptrs[v]->_tail->_neighbors[0]);
 //				std::cout << "c_front: " << c_front << "\t c_back: " << c_back
 //					<< "\t next_of_c_front:" << next_of_c_front << "\t rev_next_of_c_back " << rev_next_of_c_back << std::endl;
 
@@ -252,10 +263,8 @@ struct sep_edge_locator :public default_dfs_visitor {
 				// with two endpoints of the child path
 				for (int i = 0; i < 3; i++) {
 					if (vs[i] != c_front && vs[i] != c_back) {
-						// found the top vertex vs[i]
-						// check wether vs[i] is in the child path
-						// if not we are in Case 2
-						// otherwise, we are in Case 3
+						// found the top vertex vs[i], check wether vs[i] is in the child path
+						// if not we are in Case 2 and Case 3 otherwise
 						if (vs[i] != next_of_c_front && vs[i] != rev_next_of_c_back) {
 //							std::cout << "We are entering Case 2" << std::endl;
 							for (int j = 0; j < 3; j++) { 
@@ -265,12 +274,13 @@ struct sep_edge_locator :public default_dfs_visitor {
 									// check wheter whe should insert vs[i] to the front or the back of the cycle
 									if (source(es[j], dt_builder.g) == c_front 
 										|| target(es[j], dt_builder.g) == c_front) {
-										(*cycle_ptrs[visited_children[0]]).push_front(vs[i]);
+										(*cycle_ptrs[v]).push_front(vs[i]);
 									}
 									else {
-										(*cycle_ptrs[visited_children[0]]).push_back(vs[i]);
+										(*cycle_ptrs[v]).push_back(vs[i]);
 									}
-									cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
+									cycle_ptrs[u] = cycle_ptrs[v];
+									inside_count[u] = inside_count[v];
 //									(*cycle_ptrs[u]).print();
 								}
 							}
@@ -278,18 +288,18 @@ struct sep_edge_locator :public default_dfs_visitor {
 						else {
 //							std::cout << "We are entering Case 3" << std::endl;
 							if (vs[i] == next_of_c_front) {
-								(*cycle_ptrs[visited_children[0]]).remove_front();
+								(*cycle_ptrs[v]).remove_front();
 							}
 							else if (vs[i] == rev_next_of_c_back) {
-								(*cycle_ptrs[visited_children[0]]).remove_back();
+								(*cycle_ptrs[v]).remove_back();
 							}
 							else {
 								std::cout << "Something must be wrong here in Case 3!" << std::endl;
 							}
-							cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
+							cycle_ptrs[u] = cycle_ptrs[v];
+							inside_count[u] = inside_count[v] + 1;
 						}
 					}
-					//break;
 				}
 			}
 			else {
@@ -298,10 +308,6 @@ struct sep_edge_locator :public default_dfs_visitor {
 				Vertex w = visited_children[1];
 				srlist<Vertex>* v_cycle_ptr = cycle_ptrs[v];
 				srlist<Vertex>* w_cycle_ptr = cycle_ptrs[w];
-//				std::cout << "v_cycle: ";
-//				v_cycle.print();
-//				std::cout << "w_cycle:";
-//				w_cycle.print();
 				// gurantee that v_cycle.back() == w_cycle.front()
 				if ((*v_cycle_ptr).front() == (*w_cycle_ptr).front()) {
 					(*v_cycle_ptr).reverse();
@@ -316,15 +322,17 @@ struct sep_edge_locator :public default_dfs_visitor {
 				else  { //// v_cycle.back() == w_cycle.front()
 					//do nothing
 				}
+				int p = 0;
 				while ((*v_cycle_ptr).next(v_cycle_ptr->_tail, v_cycle_ptr->_tail->_neighbors[0]) == 
 					(*w_cycle_ptr).next(w_cycle_ptr->_head, w_cycle_ptr->_head->_neighbors[0])) {
 					(*v_cycle_ptr).remove_back();
 					(*w_cycle_ptr).remove_front();
-//					std::cout << "Next of v_cycle: " << v_cycle.back() << "\t Next of w_cycle: " << w_cycle.front() << std::endl;
+					p++;
 				}
 				(*w_cycle_ptr).remove_front();
 				(*v_cycle_ptr).splice(*(w_cycle_ptr));
 				cycle_ptrs[u] = cycle_ptrs[v];
+				inside_count[u] = inside_count[v] + inside_count[w] + p;
 				std::cout<< std::endl;
 
 			}
@@ -332,6 +340,16 @@ struct sep_edge_locator :public default_dfs_visitor {
 		}
 		(*cycle_ptrs[u]).print();
 		std::cout << "cycle separator size:" << (*cycle_ptrs[u]).size() << std::endl;
+		std::cout << "inside count: " << inside_count[u] << std::endl;
+		int ng = num_vertices(dt_builder.g);
+		int param = (2 * ng) / 3;
+		if (inside_count[u] <= param && 
+			(ng - inside_count[u] - (*cycle_ptrs[u]).size()) <= param) {
+			is_separator_found = true;
+			std::cout << "separator :" << std::endl;
+			(*cycle_ptrs[u]).print();
+		}
+
 	}
 private:
 	int n;
