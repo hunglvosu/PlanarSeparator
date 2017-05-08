@@ -141,6 +141,7 @@ T srlist<T>::front() {
 
 template<typename T>
 void srlist<T>::splice(srlist<T> _arg_list) {
+	_size += _arg_list.size();
 	_srl_node<T>* _end_node = _tail->_neighbors[0];
 	_srl_node<T>* _arg_start_node = _arg_list._head->_neighbors[0];
 
@@ -154,7 +155,6 @@ void srlist<T>::splice(srlist<T> _arg_list) {
 	i = (_arg_end_node->_neighbors[0] == _arg_list._tail) ? 0 : 1;
 	_tail->_neighbors[0] = _arg_end_node;
 	_arg_end_node->_neighbors[i] = _tail;
-	_size += _arg_list.size();
 }
 
 
@@ -252,6 +252,8 @@ void srlist<T>::debug() {
 	rev_list2.push_back(60);
 	rev_list2.push_back(70);
 	rev_list2.print();
+	std::cout << "rev_list size: " << rev_list.size() << std::endl;
+	std::cout << "rev_list2 size: " << rev_list2.size() << std::endl;
 	rev_list.splice(rev_list2);
 	std::cout << "splice: " << std::endl;
 	std::cout << "rev_list size: " << rev_list.size() << std::endl;

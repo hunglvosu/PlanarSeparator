@@ -287,8 +287,6 @@ struct sep_edge_locator :public default_dfs_visitor {
 								std::cout << "Something must be wrong here in Case 3!" << std::endl;
 							}
 							cycle_ptrs[u] = cycle_ptrs[visited_children[0]];
-							(*cycle_ptrs[u]).print();
-//							std::cout << "Finishing Case 3";
 						}
 					}
 					//break;
@@ -298,41 +296,42 @@ struct sep_edge_locator :public default_dfs_visitor {
 //				std::cout << "We are entering Case 4" << std::endl;
 				Vertex v = visited_children[0];
 				Vertex w = visited_children[1];
-				srlist<Vertex> v_cycle = *(cycle_ptrs[v]);
-				srlist<Vertex> w_cycle = *(cycle_ptrs[w]);
+				srlist<Vertex>* v_cycle_ptr = cycle_ptrs[v];
+				srlist<Vertex>* w_cycle_ptr = cycle_ptrs[w];
 //				std::cout << "v_cycle: ";
 //				v_cycle.print();
 //				std::cout << "w_cycle:";
 //				w_cycle.print();
 				// gurantee that v_cycle.back() == w_cycle.front()
-				if (v_cycle.front() == w_cycle.front()) {
-					v_cycle.reverse();
+				if ((*v_cycle_ptr).front() == (*w_cycle_ptr).front()) {
+					(*v_cycle_ptr).reverse();
 				}
-				else if (v_cycle.front() == w_cycle.back()) {
-					v_cycle.reverse();
-					w_cycle.reverse();
+				else if ((*v_cycle_ptr).front() == (*w_cycle_ptr).back()) {
+					(*v_cycle_ptr).reverse();
+					(*w_cycle_ptr).reverse();
 				}
-				else if (v_cycle.back() == w_cycle.back()) {
-					w_cycle.reverse();
+				else if ((*v_cycle_ptr).back() == (*w_cycle_ptr).back()) {
+					(*w_cycle_ptr).reverse();
 				}
 				else  { //// v_cycle.back() == w_cycle.front()
 					//do nothing
 				}
-				while (v_cycle.next(v_cycle._tail, v_cycle._tail->_neighbors[0]) == 
-					w_cycle.next(w_cycle._head, w_cycle._head->_neighbors[0])) {
-					v_cycle.remove_back();
-					w_cycle.remove_front();
+				while ((*v_cycle_ptr).next(v_cycle_ptr->_tail, v_cycle_ptr->_tail->_neighbors[0]) == 
+					(*w_cycle_ptr).next(w_cycle_ptr->_head, w_cycle_ptr->_head->_neighbors[0])) {
+					(*v_cycle_ptr).remove_back();
+					(*w_cycle_ptr).remove_front();
 //					std::cout << "Next of v_cycle: " << v_cycle.back() << "\t Next of w_cycle: " << w_cycle.front() << std::endl;
 				}
-				w_cycle.remove_front();
-				v_cycle.splice(w_cycle);
-//				(*cycle_ptrs[v]).print();
-//				std::cout << "end of case 4" << std::endl;
+				(*w_cycle_ptr).remove_front();
+				(*v_cycle_ptr).splice(*(w_cycle_ptr));
 				cycle_ptrs[u] = cycle_ptrs[v];
+				std::cout<< std::endl;
+
 			}
 
 		}
 		(*cycle_ptrs[u]).print();
+		std::cout << "cycle separator size:" << (*cycle_ptrs[u]).size() << std::endl;
 	}
 private:
 	int n;
