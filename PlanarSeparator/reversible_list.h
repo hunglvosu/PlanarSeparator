@@ -108,7 +108,6 @@ template<typename T>
 void srlist<T>::push_front(T elem){
 	_srl_node<T> *_new_node = new _srl_node<T>(elem);
 	_srl_node<T>* _start_node = _head->_neighbors[0];
-	//std::cout << "Start node: " << _start_node->_data << std::endl;
 	_head->_neighbors[0] = _new_node;
 	_new_node->_neighbors[0] = _head;
 	_new_node->_neighbors[1] = _start_node;
@@ -116,7 +115,6 @@ void srlist<T>::push_front(T elem){
 	// _start_node->neighbors[i] = head
 	_start_node->_neighbors[i] = _new_node;
 	_size++;
-//	std::cout << "Successfully pushing " << _head->_neighbors[0]->_data << " to the front" << std::endl;
 }
 
 // precondition: the list must be non-empty
