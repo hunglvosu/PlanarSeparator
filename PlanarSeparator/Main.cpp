@@ -87,8 +87,8 @@ int main() {
 	Vertex s = *(vertices(g).first);
 	Vertex t = *(vertices(g).second);
 	//print_graph(g);
-	find_low_radius_separator(g, s);
-	//find_planar_separator(g);
+	//find_low_radius_separator(g, s);
+	find_planar_separator(g);
 /*	std::list<int> list1;
 	list1.push_back(1);
 	list1.push_back(2);

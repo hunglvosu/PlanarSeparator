@@ -48,9 +48,9 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 			dual_v2f_map[*vi] = faces[i];	// map a dual vertex to a triangular face
 			i++;
 		}
-		for (int j = 0; j < num_faces(); j++) {
-			std::cout << "dual vertices: " << faces[j].dual_vertex << std::endl;
-		}
+//		for (int j = 0; j < num_faces(); j++) {
+//			std::cout << "dual vertices: " << faces[j].dual_vertex << std::endl;
+//		}
 		EdgeItr eit, eit_end;
 		TriFace f1, f2;
 		for (boost::tie(eit, eit_end) = edges(g); eit != eit_end; ++eit) {
@@ -103,7 +103,6 @@ struct bfs_dual_tree_visitor :public default_bfs_visitor {
 	template < typename Edge, typename Graph >
 	void tree_edge(Edge e, const Graph & g) const {
 		builder.is_bfs_tree_edges[e] = true;
-		std::cout << "Tree edge " << source(e, g) << "," << target(e, g) << std::endl;
 	}
 
 };
@@ -187,15 +186,15 @@ struct sep_edge_locator :public default_dfs_visitor {
 
 	void finish_vertex(Vertex u, const Graph &g) {
 		if (is_separator_found) {
-			std::cout << "The separator is found !" << std::endl;
+			//std::cout << "The separator is found !" << std::endl;
 			return;
 		}
-		std::cout << "Visiting : " << u << std::endl;
+		//std::cout << "Visiting : " << u << std::endl;
 		if (degree(u, g) <= 1) { // u is a leaf face
 			TriFace incident_face = dt_builder.dual_v2f_map[u];
 //			std::cout << "The leaf cycle: ";
-			print_tri_face(incident_face);
-			std::cout << std::endl;
+//			print_tri_face(incident_face);
+//			std::cout << std::endl;
 			std::array<Edge, 3> es;
 			boost::tie(es[0], es[1], es[2]) = incident_face.edges_on_face;
 			for (int i = 0; i < 3; i++) {
@@ -242,8 +241,8 @@ struct sep_edge_locator :public default_dfs_visitor {
 				std::array<Edge, 3> es;
 				std::array<Vertex, 3> vs;
 				TriFace dual_face = dt_builder.dual_v2f_map[u];
-				print_tri_face(dual_face);
-				std::cout << std::endl;
+//				print_tri_face(dual_face);
+//				std::cout << std::endl;
 				boost::tie(es[0], es[1], es[2]) = dual_face.edges_on_face;
 				boost::tie(vs[0], vs[1], vs[2]) = dual_face.vertices_on_face;
 
@@ -333,14 +332,14 @@ struct sep_edge_locator :public default_dfs_visitor {
 				(*v_cycle_ptr).splice(*(w_cycle_ptr));
 				cycle_ptrs[u] = cycle_ptrs[v];
 				inside_count[u] = inside_count[v] + inside_count[w] + p;
-				std::cout<< std::endl;
+//				std::cout<< std::endl;
 
 			}
 
 		}
-		(*cycle_ptrs[u]).print();
-		std::cout << "cycle separator size:" << (*cycle_ptrs[u]).size() << std::endl;
-		std::cout << "inside count: " << inside_count[u] << std::endl;
+		//(*cycle_ptrs[u]).print();
+		//std::cout << "cycle separator size:" << (*cycle_ptrs[u]).size() << std::endl;
+		//std::cout << "inside count: " << inside_count[u] << std::endl;
 		int ng = num_vertices(dt_builder.g);
 		int param = (2 * ng) / 3;
 		if (inside_count[u] <= param && 
@@ -348,6 +347,8 @@ struct sep_edge_locator :public default_dfs_visitor {
 			is_separator_found = true;
 			std::cout << "separator :" << std::endl;
 			(*cycle_ptrs[u]).print();
+			std::cout << "separator size:" << (*cycle_ptrs[u]).size() << std::endl;
+			std::cout << "inside count: " << inside_count[u] << std::endl;
 		}
 
 	}
@@ -361,7 +362,7 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 	dual_tree_builder dtb(g);
 	face_visitor fvisitor(dtb);
 	EmbeddingStorage em = find_planar_embedding(g);
-	print_planar_embedding(g, em);
+//	print_planar_embedding(g, em);
 	planar_face_traversal(g, &em[0], fvisitor);
 	
 	bfs_dual_tree_visitor bfs_visitor(dtb);
@@ -369,7 +370,7 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 	dtb.levels[source] = 0; // set_bfs_level(source, 0);
 	breadth_first_search(g, source, visitor(bfs_visitor));
 	dtb.build_dual_tree();
-	print_graph(dtb.dual_tree);
+//	print_graph(dtb.dual_tree);
 
 	// selecting a leaf vertex to be the root of dfs
 	Vertex dfs_source;

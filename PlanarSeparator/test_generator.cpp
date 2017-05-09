@@ -35,7 +35,9 @@ Graph generate_triangulated_grid(int size) {
 	for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei)
 		put(e_index, *ei, edge_count++);
 
+	std::cout << "Planar embedding" << std::endl;
 	EmbeddingStorage embedding = find_planar_embedding(g);
+	std::cout << "Make maximal " << std::endl;
 	make_maximal_planar(g, &embedding[0]);
 	// update the edge indexer
 	edge_count = 0;
