@@ -15,5 +15,5 @@ struct TriFace {
 	TriFace(VertexTuple arg_v_tuple, EdgeTuple arg_e_tuple) : vertices_on_face(arg_v_tuple), edges_on_face(arg_e_tuple) {}
 };
 
-void find_low_radius_separator(Graph const&g, Vertex source);
-
+//void find_low_radius_separator(Graph const&g, Vertex source);
+void find_low_radius_separator(Graph const&g, Vertex source, std::vector<Vertex>& separator);

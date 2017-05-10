@@ -25,6 +25,8 @@ private:
 //	int *levels;
 };
 EmbeddingStorage find_planar_embedding(Graph const &g);
+void find_planar_embedding(Graph const &g, EmbeddingStorage &estorage);
+
 void find_planar_separator(Graph const &g);
 
 template <typename Graph, typename bfs_level_data>

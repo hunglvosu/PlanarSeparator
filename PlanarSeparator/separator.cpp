@@ -5,6 +5,8 @@
 #include <boost/graph/is_straight_line_drawing.hpp>
 #include <boost/graph/chrobak_payne_drawing.hpp>
 #include <boost/graph/boyer_myrvold_planar_test.hpp>
+#include <boost/graph/make_maximal_planar.hpp>
+#include <boost/graph/make_biconnected_planar.hpp>
 #include <math.h>  
 #include "graph_def.h"
 #include "separator.h"
@@ -12,7 +14,6 @@
 #include "test_utils.h"
 
 using namespace boost;
-int separation_threshold;
 
 
 bfs_basic_visit_data::bfs_basic_visit_data(Graph const & arg_g) : g(arg_g)
@@ -70,7 +71,6 @@ struct bfs_level_visitor :public default_bfs_visitor {
 	template < typename Edge, typename Graph >
 	void tree_edge(Edge e, const Graph & g) const {
 		data.is_bfs_tree_edges[e] = true;
-		std::cout << "Tree edge" << std::endl;
 		auto u = source(e, g);
 		auto v = target(e, g);
 		int u_level = data.levels[u];
@@ -97,7 +97,6 @@ struct bfs_level_visitor :public default_bfs_visitor {
 		else {
 			data.bfs_levels.at(child_level).push_back(child);
 		}
-		//		std::cout << "tree edge " << u<< ", " << v << '\n';
 	}
 
 };
@@ -107,6 +106,11 @@ EmbeddingStorage find_planar_embedding(Graph const &g) {
 	boyer_myrvold_planarity_test(boyer_myrvold_params::graph = g,
 		boyer_myrvold_params::embedding = &estore[0]);
 	return estore;
+}
+
+void find_planar_embedding(Graph const &g, EmbeddingStorage &estore) {
+	boyer_myrvold_planarity_test(boyer_myrvold_params::graph = g,
+		boyer_myrvold_params::embedding = &estore[0]);
 }
 
 
@@ -130,21 +134,70 @@ void find_planar_separator(Graph const& g) {
 	VertexIndexer vindexer = get(vertex_index, cg);
 	//check_edge_indexer(cg, eindexer);
 	//check_vertex_indexer(cg, vindexer);
-	separation_threshold = (int)sqrt(num_vertices(cg));
+	int n = num_vertices(cg);
+	std::vector<Vertex> separator;
+	int sqrt_n = ((int)sqrt(n));
 	//std::cout << "sqrt(n) = " << threshold << std::endl;
 	//print_graph(cg);
-	EmbeddingStorage embedding = find_planar_embedding(cg);
 	//print_planar_embedding(cg, embedding);
 	bfs_level_data bfs_data(cg);
 	bfs_phase(cg, bfs_data);
-	bfs_data.debug();
-	if (bfs_data.max_level <= separation_threshold) {
+	//bfs_data.debug();
+	if (bfs_data.max_level <= sqrt_n) {
 		// precondition cg is triangulated
-
-
+		std::cout << "the numer of level is small";
+		reset_edge_indices(cg);
+		EmbeddingStorage embedding = find_planar_embedding(cg);
+		make_maximal_planar(cg, &embedding[0]);
+		reset_edge_indices(cg);
+		Vertex src = (bfs_data.bfs_levels[0].at(0));
+		std::cout << "the source\t" << src;
+		find_low_radius_separator(cg, src, separator);
 	}
 	else {
-		//processing bfs data 
+		//processing bfs data
+		std::cout << "bfs tree has many levels" << std::endl;
+		bfs_data.debug();
+		// Find a median level i such that L[0] + ... + L[i-1] <= n/2 and L[0]+...+ L[i] > n/2
+		// Here, L[i] is the number of vertices at level i
+		int i = -1;
+		int Li = 0;	// Li = L[0] +... + L[i]
+		int half_n = n / 2;
+		std::vector<std::vector<Vertex>>::iterator vi;
+		for ( vi = bfs_data.bfs_levels.begin(); vi != bfs_data.bfs_levels.end(); ++vi) {
+			//std::cout << (*vi).size() << "\t";
+			if (Li + (*vi).size() <= half_n) {
+				Li += (*vi).size();
+				i++;
+			}
+		}
+		std::cout << "Median level: " << i << std::endl;
+		if (bfs_data.bfs_levels[i].size() <= 2*sqrt_n) {
+			separator = bfs_data.bfs_levels[i];
+		}
+		else {
+
+		}
+		std::cout << "the seprator:" << std::endl;
+		for (std::vector<Vertex>::iterator vit = separator.begin(); vit != separator.end(); ++vit) {
+			std::cout << *vit << "\t";
+		}
+		std::cout << std::endl;
+
+		// do something with the separator;
+		// find connected components after removing the separator
+		/*int sep_size = selocator.separator.size();
+		size_t n_g = num_vertices(g);
+		bool* is_in_sep = new bool[n_g];
+		for (boost::tie(vit, vit_end) = vertices(g); vit != vit_end; ++vit) {
+			is_in_sep[*vit] = false;
+		}
+		for (std::vector<Vertex>::iterator sit = selocator.separator.begin(); sit != selocator.separator.end(); ++sit) {
+			is_in_sep[*sit] = true;
+		}
+		Graph cg(n_g - sep_size);*/
+
+
 	}
 
 }

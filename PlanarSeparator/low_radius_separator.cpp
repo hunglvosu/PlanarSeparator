@@ -48,9 +48,6 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 			dual_v2f_map[*vi] = faces[i];	// map a dual vertex to a triangular face
 			i++;
 		}
-//		for (int j = 0; j < num_faces(); j++) {
-//			std::cout << "dual vertices: " << faces[j].dual_vertex << std::endl;
-//		}
 		EdgeItr eit, eit_end;
 		TriFace f1, f2;
 		for (boost::tie(eit, eit_end) = edges(g); eit != eit_end; ++eit) {
@@ -80,7 +77,6 @@ struct dual_tree_builder : public bfs_basic_visit_data {
 
 	EdgeFaceMap edge_faces; 
 	DualVertexFaceMap dual_v2f_map;
-//	std::unique_ptr<TriFace[]> faces;
 	TriFace* faces;
 	Graph dual_tree;
 
@@ -157,9 +153,10 @@ struct sep_edge_locator :public default_dfs_visitor {
 	int *inside_count;		// inside_count[u] is the number of vertices enclosed by the primal cycle that 
 							// corresponds to the parent dual edge incident to u
 	bool is_separator_found = false;
+	std::vector<Vertex> &separator;
 
-
-	sep_edge_locator(dual_tree_builder &arg_dt_builder) : dt_builder(arg_dt_builder) {
+	sep_edge_locator(dual_tree_builder &arg_dt_builder, std::vector<Vertex> & arg_separator) : dt_builder(arg_dt_builder), 
+		separator(arg_separator) {
 		size_t n = num_vertices(arg_dt_builder.dual_tree);
 		//cycles = new std::list<int>*[n];
 		cycle_holder = new srlist<Vertex>[n];
@@ -345,10 +342,32 @@ struct sep_edge_locator :public default_dfs_visitor {
 		if (inside_count[u] <= param && 
 			(ng - inside_count[u] - (*cycle_ptrs[u]).size()) <= param) {
 			is_separator_found = true;
-			std::cout << "separator :" << std::endl;
-			(*cycle_ptrs[u]).print();
+			//std::cout << "separator :" << std::endl;
+			//(*cycle_ptrs[u]).print();
 			std::cout << "separator size:" << (*cycle_ptrs[u]).size() << std::endl;
 			std::cout << "inside count: " << inside_count[u] << std::endl;
+			// copy data of slrist[u] to the vector of vertices
+			_srl_node<Vertex> *_it = cycle_ptrs[u]->_head->_neighbors[0];
+			cycle_ptrs[u]->_head->_color = 0;
+			_it->_color = 0;
+			int i = 0;
+			while (_it->_neighbors[1] != nullptr) {
+				separator.push_back(_it->_data);
+				i = (_it->_neighbors[0]->_color != 0) ? 0 : 1;
+				_it = _it->_neighbors[i];
+				_it->_color = 0;
+			}
+			// reset the color
+			cycle_ptrs[u]->_head->_color = -1;
+			_it = cycle_ptrs[u]->_head->_neighbors[0];
+			_it->_color = -1;
+			while (_it->_neighbors[1] != nullptr) {
+				i = (_it->_neighbors[0]->_color != -1) ? 0 : 1;
+				//_it->->_neighbors[i] must have the color updated
+				_it = _it->_neighbors[i];
+				_it->_color = -1;
+			}
+		// To-do: delete srlist object here
 		}
 
 	}
@@ -358,7 +377,7 @@ private:
 
 
 // precondition: g must be triangulated and source is the center of g
-void find_low_radius_separator(Graph const&g, Vertex source) {
+void find_low_radius_separator(Graph const&g, Vertex source, std::vector<Vertex>& separator) {
 	dual_tree_builder dtb(g);
 	face_visitor fvisitor(dtb);
 	EmbeddingStorage em = find_planar_embedding(g);
@@ -382,7 +401,8 @@ void find_low_radius_separator(Graph const&g, Vertex source) {
 		}
 	}
 	std::cout << "dfs_root: " << dfs_source << std::endl;
-	sep_edge_locator selocator(dtb);
+	sep_edge_locator selocator(dtb, separator);
 	depth_first_search(dtb.dual_tree, visitor(selocator).color_map(get(vertex_color, dtb.dual_tree)).root_vertex(dfs_source));
+
 }
 
